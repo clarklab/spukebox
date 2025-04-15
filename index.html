@@ -1,0 +1,232 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Fjalla+One&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+    <style type="text/tailwindcss">
+      @theme {
+        --color-green: #97FF06;
+        --color-light: #F5F2E9;
+      }
+      @font-face {
+        font-family: 'Circular Std';
+        src: url('fonts/CircularStd-Book.ttf') format('truetype');
+        font-weight: 400;
+        font-style: normal;
+      }
+      @font-face {
+        font-family: 'Circular Std';
+        src: url('fonts/CircularStd-Medium.otf') format('opentype');
+        font-weight: 500;
+        font-style: normal;
+      }
+      @font-face {
+        font-family: 'Circular Std';
+        src: url('fonts/CircularStd-MediumItalic.otf') format('opentype');
+        font-weight: 500;
+        font-style: italic;
+      }
+      @font-face {
+        font-family: 'Circular Std';
+        src: url('fonts/CircularStd-Bold.otf') format('opentype');
+        font-weight: 700;
+        font-style: normal;
+      }
+      @font-face {
+        font-family: 'Circular Std';
+        src: url('fonts/CircularStd-BoldItalic.otf') format('opentype');
+        font-weight: 700;
+        font-style: italic;
+      }
+      @font-face {
+        font-family: 'Circular Std';
+        src: url('fonts/CircularStd-Black.otf') format('opentype');
+        font-weight: 900;
+        font-style: normal;
+      }
+      @font-face {
+        font-family: 'Circular Std';
+        src: url('fonts/CircularStd-BlackItalic.otf') format('opentype');
+        font-weight: 900;
+        font-style: italic;
+      }
+      body {
+        font-family: 'Circular Std', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+      }
+      .font-condensed {
+        font-family: 'Fjalla One', sans-serif;
+      }
+    </style>
+  </head>
+  <body class="h-screen w-screen overflow-hidden m-0 p-0 bg-light">
+    <div class="flex h-full">
+      <!-- Left column (1/2 width) -->
+      <div class="w-1/2 h-full bg-light">
+        <div class="p-6">
+          <h1 class="text-base font-bold mb-2">ADD TRACKS</h1>
+          <input type="text" class="w-full border-5 border-green rounded-full p-4 px-6 bg-green/10 placeholder:font-bold focus:outline-none focus:ring-2 focus:ring-green" placeholder="Search for a track">
+        
+            <div class="results mt-4">
+                <h1 class="text-base font-bold mb-2">SPOTIFY RESULTS</h1>
+          <div class="queue flex-1 overflow-y-auto">
+            <div class="track flex gap-3 group hover:cursor-pointer p-4 bg-orange-500/10 rounded-lg mb-3">
+                <img src="https://i.scdn.co/image/ab67616d000048519b9674e375e16227507820df" width="64" height="64" alt="" class="rounded track-image">
+                <div class="track-info w-full">
+                    <div class="track-name flex justify-between place-items-center w-full gap-4">
+                        <h3 class="text-lg font-semibold font-black track-title line-clamp-1">Chick Magnet</h3>
+                        <span class="running-time text-black/40 font-normal track-duration">3:12</span>
+                    </div>
+                    <div class="track-artist flex justify-between place-items-cente gap-4">
+                        <h3 class="text-black/40 artist-name line-clamp-1">MxPx</h3>  
+                    </div>
+                </div>
+            </div>
+
+            <div class="track flex gap-3 group hover:cursor-pointer p-4 bg-orange-500/10 rounded-lg mb-3">
+                <img src="https://i.scdn.co/image/ab67616d00004851c8a11e48c91a982d086afc69" width="64" height="64" alt="" class="rounded track-image">
+                <div class="track-info w-full">
+                    <div class="track-name flex justify-between place-items-center w-full gap-4">
+                        <h3 class="text-lg font-semibold font-black track-title line-clamp-1">Mr. Brightside</h3>
+                        <span class="running-time text-black/40 font-normal track-duration">3:42</span>
+                    </div>
+                    <div class="track-artist flex justify-between place-items-cente gap-4">
+                        <h3 class="text-black/40 artist-name line-clamp-1">The Killers</h3>  
+                    </div>
+                </div>
+            </div>
+
+            <div class="track flex gap-3 group hover:cursor-pointer p-4 bg-orange-500/10 rounded-lg mb-3">
+                <img src="https://i.scdn.co/image/ab67616d00004851b0b9b754c5b9a0a0c0a0c0a0" width="64" height="64" alt="" class="rounded track-image">
+                <div class="track-info w-full">
+                    <div class="track-name flex justify-between place-items-center w-full gap-4">
+                        <h3 class="text-lg font-semibold font-black track-title line-clamp-1">Take On Me</h3>
+                        <span class="running-time text-black/40 font-normal track-duration">3:48</span>
+                    </div>
+                    <div class="track-artist flex justify-between place-items-cente gap-4">
+                        <h3 class="text-black/40 artist-name line-clamp-1">a-ha</h3>  
+                    </div>
+                </div>
+            </div>
+
+            <div class="track flex gap-3 group hover:cursor-pointer p-4 bg-orange-500/10 rounded-lg mb-3">
+                <img src="https://i.scdn.co/image/ab67616d00004851d4b8b0b0b0b0b0b0b0b0b0b0" width="64" height="64" alt="" class="rounded track-image">
+                <div class="track-info w-full">
+                    <div class="track-name flex justify-between place-items-center w-full gap-4">
+                        <h3 class="text-lg font-semibold font-black track-title line-clamp-1">Sweet Dreams</h3>
+                        <span class="running-time text-black/40 font-normal track-duration">3:36</span>
+                    </div>
+                    <div class="track-artist flex justify-between place-items-cente gap-4">
+                        <h3 class="text-black/40 artist-name line-clamp-1">Eurythmics</h3>  
+                    </div>
+                </div>
+            </div>
+
+            <div class="track flex gap-3 group hover:cursor-pointer p-4 bg-orange-500/10 rounded-lg mb-3">
+                <img src="https://i.scdn.co/image/ab67616d00004851e0e0e0e0e0e0e0e0e0e0e0e0" width="64" height="64" alt="" class="rounded track-image">
+                <div class="track-info w-full">
+                    <div class="track-name flex justify-between place-items-center w-full gap-4">
+                        <h3 class="text-lg font-semibold font-black track-title line-clamp-1">Don't Stop Believin'</h3>
+                        <span class="running-time text-black/40 font-normal track-duration">4:10</span>
+                    </div>
+                    <div class="track-artist flex justify-between place-items-cente gap-4">
+                        <h3 class="text-black/40 artist-name line-clamp-1">Journey</h3>  
+                    </div>
+                </div>
+            </div>
+          </div>
+          </div>
+          </div>
+      </div>
+      
+      <!-- Right column (1/2 width) -->
+      <div class="w-1/2 h-full bg-light">
+        <div class="p-6 flex flex-col h-full">
+          <h1 class="text-base font-bold mb-2">NOW PLAYING</h1>
+          <div class="track flex gap-4 mb-8">
+            <div class="cover w-1/2">
+                <img src="images/cover-placeholder.jpg" alt="">
+            </div>
+            <div class="flex flex-col gap-4 w-1/2">
+                <div class="flex flex-col gap-2">
+                    <p class="artist-name text-sm text-gray-500">Disclosure</p>
+                    <h2 class="track-title font-condensed text-6xl uppercase line-clamp-3">When a Fire Starts to Burn</h2>
+                </div>
+            </div>
+          </div>
+
+          <h1 class="text-base font-bold mb-2">UP NEXT</h1>
+          <div class="queue flex-1 overflow-y-auto">
+            <div class="track flex gap-3 group hover:cursor-pointer p-4 bg-orange-500/10 rounded-lg mb-3">
+                <img src="https://i.scdn.co/image/ab67616d000048519b9674e375e16227507820df" width="64" height="64" alt="" class="rounded track-image">
+                <div class="track-info w-full">
+                    <div class="track-name flex justify-between place-items-center w-full gap-4">
+                        <h3 class="text-lg font-semibold font-black track-title line-clamp-1">Chick Magnet</h3>
+                        <span class="running-time text-black/40 font-normal track-duration">3:12</span>
+                    </div>
+                    <div class="track-artist flex justify-between place-items-cente gap-4">
+                        <h3 class="text-black/40 artist-name line-clamp-1">MxPx</h3>  
+                    </div>
+                </div>
+            </div>
+
+            <div class="track flex gap-3 group hover:cursor-pointer p-4 bg-orange-500/10 rounded-lg mb-3">
+                <img src="https://i.scdn.co/image/ab67616d00004851c8a11e48c91a982d086afc69" width="64" height="64" alt="" class="rounded track-image">
+                <div class="track-info w-full">
+                    <div class="track-name flex justify-between place-items-center w-full gap-4">
+                        <h3 class="text-lg font-semibold font-black track-title line-clamp-1">Mr. Brightside</h3>
+                        <span class="running-time text-black/40 font-normal track-duration">3:42</span>
+                    </div>
+                    <div class="track-artist flex justify-between place-items-cente gap-4">
+                        <h3 class="text-black/40 artist-name line-clamp-1">The Killers</h3>  
+                    </div>
+                </div>
+            </div>
+
+            <div class="track flex gap-3 group hover:cursor-pointer p-4 bg-orange-500/10 rounded-lg mb-3">
+                <img src="https://i.scdn.co/image/ab67616d00004851b0b9b754c5b9a0a0c0a0c0a0" width="64" height="64" alt="" class="rounded track-image">
+                <div class="track-info w-full">
+                    <div class="track-name flex justify-between place-items-center w-full gap-4">
+                        <h3 class="text-lg font-semibold font-black track-title line-clamp-1">Take On Me</h3>
+                        <span class="running-time text-black/40 font-normal track-duration">3:48</span>
+                    </div>
+                    <div class="track-artist flex justify-between place-items-cente gap-4">
+                        <h3 class="text-black/40 artist-name line-clamp-1">a-ha</h3>  
+                    </div>
+                </div>
+            </div>
+
+            <div class="track flex gap-3 group hover:cursor-pointer p-4 bg-orange-500/10 rounded-lg mb-3">
+                <img src="https://i.scdn.co/image/ab67616d00004851d4b8b0b0b0b0b0b0b0b0b0b0" width="64" height="64" alt="" class="rounded track-image">
+                <div class="track-info w-full">
+                    <div class="track-name flex justify-between place-items-center w-full gap-4">
+                        <h3 class="text-lg font-semibold font-black track-title line-clamp-1">Sweet Dreams</h3>
+                        <span class="running-time text-black/40 font-normal track-duration">3:36</span>
+                    </div>
+                    <div class="track-artist flex justify-between place-items-cente gap-4">
+                        <h3 class="text-black/40 artist-name line-clamp-1">Eurythmics</h3>  
+                    </div>
+                </div>
+            </div>
+
+            <div class="track flex gap-3 group hover:cursor-pointer p-4 bg-orange-500/10 rounded-lg mb-3">
+                <img src="https://i.scdn.co/image/ab67616d00004851e0e0e0e0e0e0e0e0e0e0e0e0" width="64" height="64" alt="" class="rounded track-image">
+                <div class="track-info w-full">
+                    <div class="track-name flex justify-between place-items-center w-full gap-4">
+                        <h3 class="text-lg font-semibold font-black track-title line-clamp-1">Don't Stop Believin'</h3>
+                        <span class="running-time text-black/40 font-normal track-duration">4:10</span>
+                    </div>
+                    <div class="track-artist flex justify-between place-items-cente gap-4">
+                        <h3 class="text-black/40 artist-name line-clamp-1">Journey</h3>  
+                    </div>
+                </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </body>
+</html>
