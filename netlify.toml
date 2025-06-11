@@ -1,5 +1,5 @@
 [build]
-  command = "mkdir -p dist && cp index.html dist/ && cp -r images dist/ && cp -r fonts dist/"
+  command = "mkdir -p dist && cp index.html unfurl.png dist/ && cp -r images dist/ && cp -r fonts dist/"
   publish = "dist"
 
 [functions]
