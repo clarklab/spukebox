@@ -5,10 +5,15 @@
 
 # Dependencies
 node_modules/
+.pnp/
+.pnp.js
 
-# Build output
-dist/
+# Testing
+coverage/
+
+# Production
 build/
+dist/
 
 # IDE files
 .idea/
@@ -19,3 +24,16 @@ build/
 # OS files
 .DS_Store
 Thumbs.db 
+
+# Misc
+.env.development.local
+.env.test.local
+.env.production.local
+
+# Debug
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Local Netlify folder
+.netlify

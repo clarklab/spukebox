@@ -1,16 +1,20 @@
 <!doctype html>
-<html>
+<html class="h-full w-full">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Spukebox</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Fjalla+One&display=swap" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+    <script src="https://sdk.scdn.co/spotify-player.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/color-thief/2.3.0/color-thief.umd.js"></script>
+    <meta property="og:image" content="/unfurl.png">
     <style type="text/tailwindcss">
       @theme {
         --color-green: #97FF06;
-        --color-light: #F5F2E9;
+        --color-light: #F8F6EF;
       }
       @font-face {
         font-family: 'Circular Std';
@@ -56,177 +60,1176 @@
       }
       body {
         font-family: 'Circular Std', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+        background-color: black;
+        color: white;
+        transition: background-color 2s ease;
       }
       .font-condensed {
         font-family: 'Fjalla One', sans-serif;
       }
+      .loading {
+        animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+      }
+      @keyframes pulse {
+        0%, 100% {
+          opacity: 1;
+        }
+        50% {
+          opacity: .5;
+        }
+      }
+      @keyframes spin {
+        from {
+          transform: translateX(30px) rotate(0deg);
+        }
+        to {
+          transform: translateX(30px) rotate(360deg);
+        }
+      }
+      @keyframes search {
+        0% {
+          transform: scale(1);
+          opacity: 1;
+        }
+        50% {
+          transform: scale(1.1);
+          opacity: 0.7;
+        }
+        100% {
+          transform: scale(1);
+          opacity: 1;
+        }
+      }
+      .modal {
+        opacity: 0;
+        visibility: hidden;
+        transform: scale(0.95);
+        transition: all 0.2s ease-out;
+      }
+      .modal.active {
+        opacity: 1;
+        visibility: visible;
+        transform: scale(1);
+      }
+      .modal-backdrop {
+        opacity: 0;
+        visibility: hidden;
+        transition: opacity 0.2s ease-out;
+      }
+      .modal-backdrop.active {
+        opacity: 1;
+        visibility: visible;
+      }
+      .track.playing {
+        animation: none;
+      }
+      .playbar {
+        display: none;
+        align-items: center;
+        gap: 10px;
+        margin-top: 10px;
+        width: 100%;
+      }
+      .progressBar {
+        flex: 1;
+        height: 12px;
+        background-color: rgba(255, 255, 255, 0.1);
+        border-radius: 6px;
+        overflow: hidden;
+      }
+      .progress {
+        height: 100%;
+        background-color: var(--color-green);
+        width: 0%;
+        transition: width 0.1s linear;
+      }
+      .currentTime, .duration {
+        font-size: 16px;
+        font-weight: bold;
+        color: rgba(255, 255, 255, 0.5);
+        min-width: 50px;
+        font-family: 'Circular Std', sans-serif;
+      }
+      .record {
+        animation: spin 3s linear infinite;
+        transition: left 0.3s ease-in-out;
+      }
+      .ball {
+        opacity: 0;
+        transition: opacity 1s ease-in-out;
+      }
+      .ball.playing {
+        opacity: 1;
+      }
+      .ball2 {
+        opacity: 0;
+        transition: opacity 1s ease-in-out;
+        transform: rotate(180deg) scaleX(-1);
+      }
+      .ball2.playing {
+        opacity: 1;
+      }
     </style>
   </head>
-  <body class="h-screen w-screen overflow-hidden m-0 p-0 bg-light">
+  <body class="h-screen w-screen overflow-hidden m-0 p-0 bg-light h-full">
+
+<svg class="ball absolute inset-0 w-full h-full pointer-events-none -z-1" xmlns="http://www.w3.org/2000/svg" shape-rendering="geometricPrecision" text-rendering="geometricPrecision" viewBox="0 0 1280 720" style="white-space: pre;">
+    <style>
+      @keyframes a0_t { 0% { transform: translate(63.5px,201.5px); } 20% { transform: translate(704.755366px,678.215137px); } 40% { transform: translate(1219px,429.5px); } 60% { transform: translate(838px,63.5px); } 80% { transform: translate(370.81097px,680.746203px); } 100% { transform: translate(64px,201px); } }
+    </style>
+    <defs>
+        <filter id="Filter-0" x="-50%" y="-50%" width="250%" height="250%" color-interpolation-filters="sRGB">
+            <feGaussianBlur stdDeviation="80"/>
+        </filter>
+    </defs>
+    <ellipse rx="242" ry="242" fill="#00ff0a" stroke="none" opacity="0.5" filter="url(#Filter-0)" transform="translate(63.5,201.5)" style="animation: 20s linear infinite both a0_t;"/>
+</svg>
+
+<svg class="ball2 absolute inset-0 w-full h-full pointer-events-none blur-3xl -z-1" xmlns="http://www.w3.org/2000/svg" shape-rendering="geometricPrecision" text-rendering="geometricPrecision" viewBox="0 0 1280 720" style="white-space: pre;">
+    <style>
+      @keyframes a0_t { 0% { transform: translate(63.5px,201.5px); } 20% { transform: translate(704.755366px,678.215137px); } 40% { transform: translate(1219px,429.5px); } 60% { transform: translate(838px,63.5px); } 80% { transform: translate(370.81097px,680.746203px); } 100% { transform: translate(64px,201px); } }
+    </style>
+    <defs>
+        <filter id="Filter-1" x="-50%" y="-50%" width="250%" height="250%" color-interpolation-filters="sRGB">
+            <feGaussianBlur stdDeviation="80"/>
+        </filter>
+    </defs>
+    <ellipse rx="242" ry="242" fill="#00ff0a" stroke="none" opacity="0.5" filter="url(#Filter-1)" transform="translate(63.5,201.5)" style="animation: 15s linear infinite both a0_t;"/>
+</svg>
+
+    <!-- Modal -->
+    <div id="modalBackdrop" class="modal-backdrop fixed inset-0 bg-black/50 z-50"></div>
+    <div id="confirmationModal" class="modal fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-black p-6 rounded-2xl shadow-2xl border-green border-4 z-50 w-96">
+      <div class="flex flex-col items-center gap-4">
+      <div class="flex gap-5 justify-start w-full">
+        <img id="modalTrackImage" src="" alt="" class="w-32 h-32 rounded-lg shadow-lg">
+        <div class="flex flex-col justify-center">
+          <h3 id="modalTrackName" class="text-xl font-bold text-white line-clamp-3"></h3>
+          <p id="modalTrackArtist" class="text-white/50"></p>
+          <div class="flex justify-start gap-0 text-sm text-white/50">
+            <span id="modalTrackYear"></span>, &nbsp;
+            <span id="modalTrackDuration"></span>
+          </div>
+        </div>
+        </div>
+        <div class="flex w-full gap-4 mt-4">
+          <button id="cancelAdd" class="px-6 py-4 bg-white/10 text-white rounded-lg hover:bg-white/20 transition-colors w-full">Cancel</button>
+          <button id="confirmAdd" class="px-6 py-4 bg-green text-black rounded-lg hover:bg-green/80 transition-colors w-full">Add to Queue</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Queue Action Modal -->
+    <div id="queueActionBackdrop" class="modal-backdrop fixed inset-0 bg-black/50 z-50"></div>
+    <div id="queueActionModal" class="modal fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-black p-6 rounded-2xl shadow-2xl border-green border-4 z-50 w-96">
+      <div class="flex flex-col items-center gap-4">
+        <h3 class="text-xl font-bold text-white text-center">Do you want to REMOVE or PLAY this track now?</h3>
+        <div class="flex w-full gap-4 mt-4">
+          <button id="removeQueueAction" class="px-6 py-4 bg-white/10 text-red-500 rounded-lg hover:bg-white transition-colors w-full">Remove</button>
+          <button id="playQueueAction" class="px-6 py-4 bg-green text-black rounded-lg hover:bg-green/80 transition-colors w-full">Play Now</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Queue Confirmation Modal -->
+    <div id="queueConfirmBackdrop" class="modal-backdrop fixed inset-0 bg-black/50 z-50"></div>
+    <div id="queueConfirmModal" class="modal fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-black p-6 rounded-2xl shadow-2xl border-green border-4 z-50 w-96">
+      <div class="flex flex-col items-center gap-4">
+        <h3 id="queueConfirmMessage" class="text-xl font-bold text-white text-center"></h3>
+        <div class="flex w-full gap-4 mt-4">
+          <button id="cancelQueueConfirm" class="px-6 py-4 bg-white/10 text-white rounded-lg hover:bg-white/20 transition-colors w-full">Cancel</button>
+          <button id="confirmQueueConfirm" class="px-6 py-4 bg-green text-black rounded-lg hover:bg-green/80 transition-colors w-full">Yes</button>
+        </div>
+      </div>
+    </div>
+
     <div class="flex h-full">
       <!-- Left column (1/2 width) -->
-      <div class="w-1/2 h-full bg-light">
-        <div class="p-6">
-          <h1 class="text-base font-bold mb-2">ADD TRACKS</h1>
-          <input type="text" class="w-full border-5 border-green rounded-full p-4 px-6 bg-green/10 placeholder:font-bold focus:outline-none focus:ring-2 focus:ring-green" placeholder="Search for a track">
+      <div class="w-2/5 h-full bg-black/30">
+        <div class="p-6 pb-0 flex flex-col h-full">
+          <h1 class="text-base font-bold mb-2 text-white">ADD TRACKS</h1>
+          <div class="relative">
+            <input type="text" id="searchInput" class="w-full border-5 border-white rounded-full p-4 px-6 bg-white/10 text-white placeholder:text-white/50 placeholder:font-bold focus:outline-none focus:ring-0 focus:border-green transition-colors hover:bg-white/10 [&:-webkit-autofill]:bg-white/10 [&:-webkit-autofill]:text-white [&:-webkit-autofill]:placeholder:text-white/50 [&:-webkit-autofill]:shadow-[0_0_0_1000px_rgba(0,0,0,0.1)_inset] [&:-webkit-autofill]:[-webkit-text-fill-color:white]" placeholder="Search for a track" autocomplete="off">
+            <button id="clearSearch" class="absolute right-6 top-1/2 -translate-y-1/2 text-white/50 hover:text-white transition-colors hidden">
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" viewBox="0 0 20 20" fill="currentColor">
+                <path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd" />
+              </svg>
+            </button>
+          </div>
         
-            <div class="results mt-4">
-                <h1 class="text-base font-bold mb-2">SPOTIFY RESULTS</h1>
-          <div class="queue flex-1 overflow-y-auto">
-            <div class="track flex gap-3 group hover:cursor-pointer p-4 bg-orange-500/10 rounded-lg mb-3">
-                <img src="https://i.scdn.co/image/ab67616d000048519b9674e375e16227507820df" width="64" height="64" alt="" class="rounded track-image">
-                <div class="track-info w-full">
-                    <div class="track-name flex justify-between place-items-center w-full gap-4">
-                        <h3 class="text-lg font-semibold font-black track-title line-clamp-1">Chick Magnet</h3>
-                        <span class="running-time text-black/40 font-normal track-duration">3:12</span>
-                    </div>
-                    <div class="track-artist flex justify-between place-items-cente gap-4">
-                        <h3 class="text-black/40 artist-name line-clamp-1">MxPx</h3>  
-                    </div>
-                </div>
-            </div>
-
-            <div class="track flex gap-3 group hover:cursor-pointer p-4 bg-orange-500/10 rounded-lg mb-3">
-                <img src="https://i.scdn.co/image/ab67616d00004851c8a11e48c91a982d086afc69" width="64" height="64" alt="" class="rounded track-image">
-                <div class="track-info w-full">
-                    <div class="track-name flex justify-between place-items-center w-full gap-4">
-                        <h3 class="text-lg font-semibold font-black track-title line-clamp-1">Mr. Brightside</h3>
-                        <span class="running-time text-black/40 font-normal track-duration">3:42</span>
-                    </div>
-                    <div class="track-artist flex justify-between place-items-cente gap-4">
-                        <h3 class="text-black/40 artist-name line-clamp-1">The Killers</h3>  
-                    </div>
-                </div>
-            </div>
-
-            <div class="track flex gap-3 group hover:cursor-pointer p-4 bg-orange-500/10 rounded-lg mb-3">
-                <img src="https://i.scdn.co/image/ab67616d00004851b0b9b754c5b9a0a0c0a0c0a0" width="64" height="64" alt="" class="rounded track-image">
-                <div class="track-info w-full">
-                    <div class="track-name flex justify-between place-items-center w-full gap-4">
-                        <h3 class="text-lg font-semibold font-black track-title line-clamp-1">Take On Me</h3>
-                        <span class="running-time text-black/40 font-normal track-duration">3:48</span>
-                    </div>
-                    <div class="track-artist flex justify-between place-items-cente gap-4">
-                        <h3 class="text-black/40 artist-name line-clamp-1">a-ha</h3>  
-                    </div>
-                </div>
-            </div>
-
-            <div class="track flex gap-3 group hover:cursor-pointer p-4 bg-orange-500/10 rounded-lg mb-3">
-                <img src="https://i.scdn.co/image/ab67616d00004851d4b8b0b0b0b0b0b0b0b0b0b0" width="64" height="64" alt="" class="rounded track-image">
-                <div class="track-info w-full">
-                    <div class="track-name flex justify-between place-items-center w-full gap-4">
-                        <h3 class="text-lg font-semibold font-black track-title line-clamp-1">Sweet Dreams</h3>
-                        <span class="running-time text-black/40 font-normal track-duration">3:36</span>
-                    </div>
-                    <div class="track-artist flex justify-between place-items-cente gap-4">
-                        <h3 class="text-black/40 artist-name line-clamp-1">Eurythmics</h3>  
-                    </div>
-                </div>
-            </div>
-
-            <div class="track flex gap-3 group hover:cursor-pointer p-4 bg-orange-500/10 rounded-lg mb-3">
-                <img src="https://i.scdn.co/image/ab67616d00004851e0e0e0e0e0e0e0e0e0e0e0e0" width="64" height="64" alt="" class="rounded track-image">
-                <div class="track-info w-full">
-                    <div class="track-name flex justify-between place-items-center w-full gap-4">
-                        <h3 class="text-lg font-semibold font-black track-title line-clamp-1">Don't Stop Believin'</h3>
-                        <span class="running-time text-black/40 font-normal track-duration">4:10</span>
-                    </div>
-                    <div class="track-artist flex justify-between place-items-cente gap-4">
-                        <h3 class="text-black/40 artist-name line-clamp-1">Journey</h3>  
-                    </div>
-                </div>
-            </div>
-          </div>
-          </div>
-          </div>
-      </div>
-      
-      <!-- Right column (1/2 width) -->
-      <div class="w-1/2 h-full bg-light">
-        <div class="p-6 flex flex-col h-full">
-          <h1 class="text-base font-bold mb-2">NOW PLAYING</h1>
-          <div class="track flex gap-4 mb-8">
-            <div class="cover w-1/2">
-                <img src="images/cover-placeholder.jpg" alt="">
-            </div>
-            <div class="flex flex-col gap-4 w-1/2">
-                <div class="flex flex-col gap-2">
-                    <p class="artist-name text-sm text-gray-500">Disclosure</p>
-                    <h2 class="track-title font-condensed text-6xl uppercase line-clamp-3">When a Fire Starts to Burn</h2>
-                </div>
-            </div>
-          </div>
-
-          <h1 class="text-base font-bold mb-2">UP NEXT</h1>
-          <div class="queue flex-1 overflow-y-auto">
-            <div class="track flex gap-3 group hover:cursor-pointer p-4 bg-orange-500/10 rounded-lg mb-3">
-                <img src="https://i.scdn.co/image/ab67616d000048519b9674e375e16227507820df" width="64" height="64" alt="" class="rounded track-image">
-                <div class="track-info w-full">
-                    <div class="track-name flex justify-between place-items-center w-full gap-4">
-                        <h3 class="text-lg font-semibold font-black track-title line-clamp-1">Chick Magnet</h3>
-                        <span class="running-time text-black/40 font-normal track-duration">3:12</span>
-                    </div>
-                    <div class="track-artist flex justify-between place-items-cente gap-4">
-                        <h3 class="text-black/40 artist-name line-clamp-1">MxPx</h3>  
-                    </div>
-                </div>
-            </div>
-
-            <div class="track flex gap-3 group hover:cursor-pointer p-4 bg-orange-500/10 rounded-lg mb-3">
-                <img src="https://i.scdn.co/image/ab67616d00004851c8a11e48c91a982d086afc69" width="64" height="64" alt="" class="rounded track-image">
-                <div class="track-info w-full">
-                    <div class="track-name flex justify-between place-items-center w-full gap-4">
-                        <h3 class="text-lg font-semibold font-black track-title line-clamp-1">Mr. Brightside</h3>
-                        <span class="running-time text-black/40 font-normal track-duration">3:42</span>
-                    </div>
-                    <div class="track-artist flex justify-between place-items-cente gap-4">
-                        <h3 class="text-black/40 artist-name line-clamp-1">The Killers</h3>  
-                    </div>
-                </div>
-            </div>
-
-            <div class="track flex gap-3 group hover:cursor-pointer p-4 bg-orange-500/10 rounded-lg mb-3">
-                <img src="https://i.scdn.co/image/ab67616d00004851b0b9b754c5b9a0a0c0a0c0a0" width="64" height="64" alt="" class="rounded track-image">
-                <div class="track-info w-full">
-                    <div class="track-name flex justify-between place-items-center w-full gap-4">
-                        <h3 class="text-lg font-semibold font-black track-title line-clamp-1">Take On Me</h3>
-                        <span class="running-time text-black/40 font-normal track-duration">3:48</span>
-                    </div>
-                    <div class="track-artist flex justify-between place-items-cente gap-4">
-                        <h3 class="text-black/40 artist-name line-clamp-1">a-ha</h3>  
-                    </div>
-                </div>
-            </div>
-
-            <div class="track flex gap-3 group hover:cursor-pointer p-4 bg-orange-500/10 rounded-lg mb-3">
-                <img src="https://i.scdn.co/image/ab67616d00004851d4b8b0b0b0b0b0b0b0b0b0b0" width="64" height="64" alt="" class="rounded track-image">
-                <div class="track-info w-full">
-                    <div class="track-name flex justify-between place-items-center w-full gap-4">
-                        <h3 class="text-lg font-semibold font-black track-title line-clamp-1">Sweet Dreams</h3>
-                        <span class="running-time text-black/40 font-normal track-duration">3:36</span>
-                    </div>
-                    <div class="track-artist flex justify-between place-items-cente gap-4">
-                        <h3 class="text-black/40 artist-name line-clamp-1">Eurythmics</h3>  
-                    </div>
-                </div>
-            </div>
-
-            <div class="track flex gap-3 group hover:cursor-pointer p-4 bg-orange-500/10 rounded-lg mb-3">
-                <img src="https://i.scdn.co/image/ab67616d00004851e0e0e0e0e0e0e0e0e0e0e0e0" width="64" height="64" alt="" class="rounded track-image">
-                <div class="track-info w-full">
-                    <div class="track-name flex justify-between place-items-center w-full gap-4">
-                        <h3 class="text-lg font-semibold font-black track-title line-clamp-1">Don't Stop Believin'</h3>
-                        <span class="running-time text-black/40 font-normal track-duration">4:10</span>
-                    </div>
-                    <div class="track-artist flex justify-between place-items-cente gap-4">
-                        <h3 class="text-black/40 artist-name line-clamp-1">Journey</h3>  
-                    </div>
-                </div>
+          <div class="results mt-4 flex-1 flex flex-col min-h-0">
+            <h1 class="text-base font-bold mb-2 hidden text-white" id="resultsLabel">SPOTIFY RESULTS</h1>
+            <div id="searchStatus" class="text-sm text-white/50 mb-2"></div>
+            <div class="list flex-1 overflow-y-auto rounded-t-2xl overflow-hidden" id="searchResults">
+              <div class="flex flex-col items-center justify-center h-full text-white/50">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8 mb-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                </svg>
+                <p class="text-lg">Search to find tracks</p>
+              </div>
             </div>
           </div>
         </div>
       </div>
+      
+      <!-- Right column (1/2 width) -->
+      <div class="w-3/5 h-full">
+        <div class="p-6 pb-0 flex flex-col h-full">
+          <h1 class="text-base font-bold mb-2 text-white">NOW PLAYING</h1>
+          <div class="track playing flex gap-8 mb-8">
+            <div class="cover w-1/2 relative">
+                <img src="images/record.webp" alt="" class="record absolute inset-0 w-full h-full object-cover">
+                <img id="nowPlayingImage" src="images/cover-placeholder.jpg" alt="" class="relative rounded-lg shadow-2xl/50 w-full z-10">
+            </div>
+            <div class="flex flex-col gap-4 w-1/2">
+                <div class="flex flex-col gap-2 h-full">
+                    <p id="nowPlayingArtist" class="artist-name text-lg text-white/50 text-right">Add tracks to get started</p>
+                    <h2 id="nowPlayingTitle" class="track-title font-condensed text-6xl uppercase line-clamp-3 break-words hyphens-auto text-ellipsis overflow-hidden text-white h-full text-right">Ready to<br>Party!</h2>
+                    <div class="playbar pr-2">
+                    <div class="currentTime text-lg font-bold">00:00</div>
+                    <div class="progressBar">
+                        <div class="progress"></div>
+                    </div>
+                    <div class="duration text-lg font-bold">04:00</div>
+                    </div>
+                </div>
+            </div>
+          </div>
+
+          <div class="flex justify-between items-center mb-2">
+            <h1 class="text-base font-bold text-white">UP NEXT</h1>
+            <span id="queueDuration" class="text-base text-white/50 pr-4">00:00</span>
+          </div>
+          <div class="queue flex-1 overflow-y-auto rounded-t-2xl" id="queue">
+            <!-- Queue items will be populated here -->
+          </div>
+        </div>
+      </div>
     </div>
+
+    <script>
+      // State management
+      let queue = [];
+      let currentTrack = null;
+      let selectedTrack = null;
+      let isPlaying = false;
+      let accessToken = localStorage.getItem('spotify_access_token');
+      let refreshToken = localStorage.getItem('spotify_refresh_token');
+      let player = null;
+      let deviceId = null;
+      let tokenExpiry = localStorage.getItem('spotify_token_expiry');
+
+      // Initialize Web Playback SDK
+      window.onSpotifyWebPlaybackSDKReady = () => {
+        console.log('Spotify Web Playback SDK is ready');
+        if (accessToken) {
+          initializePlayer(accessToken).catch(error => {
+            console.error('Failed to initialize player:', error);
+            getAccessToken();
+          });
+        }
+      };
+
+      // Initialize player
+      async function initializePlayer(token) {
+        return new Promise((resolve, reject) => {
+          console.log('Initializing player...');
+          
+          if (player) {
+            console.log('Disconnecting existing player...');
+            player.disconnect();
+          }
+
+          // Check if we're on a mobile device
+          const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+          console.log('Is mobile device:', isMobile);
+
+          player = new Spotify.Player({
+            name: 'Spukebox Player',
+            getOAuthToken: async (cb) => {
+              try {
+                console.log('Getting OAuth token...');
+                // Check if token is expired
+                if (tokenExpiry && Date.now() > tokenExpiry) {
+                  console.log('Token expired, refreshing...');
+                  const newToken = await getAccessToken();
+                  if (newToken) {
+                    token = newToken;
+                  }
+                }
+                cb(token);
+              } catch (error) {
+                console.error('Error refreshing token:', error);
+                reject(error);
+              }
+            },
+            volume: 0.5
+          });
+
+          // Error handling
+          player.addListener('initialization_error', ({ message }) => {
+            console.error('Failed to initialize:', message);
+            showError('Failed to initialize player: ' + message);
+            reject(new Error(message));
+          });
+          player.addListener('authentication_error', async ({ message }) => {
+            console.error('Failed to authenticate:', message);
+            // Clear stored tokens on auth error
+            localStorage.removeItem('spotify_access_token');
+            localStorage.removeItem('spotify_refresh_token');
+            localStorage.removeItem('spotify_token_expiry');
+            accessToken = null;
+            refreshToken = null;
+            tokenExpiry = null;
+            // Try to get a new token
+            const newToken = await getAccessToken();
+            if (newToken) {
+              await initializePlayer(newToken);
+            } else {
+              showError('Failed to authenticate: ' + message);
+              reject(new Error(message));
+            }
+          });
+          player.addListener('account_error', ({ message }) => {
+            console.error('Failed to validate Spotify account:', message);
+            showError('Failed to validate Spotify account: ' + message);
+            reject(new Error(message));
+          });
+          player.addListener('playback_error', ({ message }) => {
+            console.error('Playback error:', message);
+            // Suppress the PlayLoad event errors as they don't affect playback
+            if (!message.includes('PlayLoad event failed')) {
+              showError('Failed to play track: ' + message);
+            }
+          });
+
+          // Playback status updates
+          player.addListener('player_state_changed', state => {
+            console.log('Player state changed:', state);
+            if (state) {
+              const currentTrack = state.track_window.current_track;
+              updateNowPlaying(currentTrack);
+              isPlaying = !state.paused;
+              
+              // Update record position based on playback state
+              const record = document.querySelector('.record');
+              if (record) {
+                if (!state.paused) {
+                  record.classList.add('left-6');
+                } else {
+                  record.classList.remove('left-6');
+                }
+              }
+              
+              // Update ball visibility based on playback state
+              const ball1 = document.querySelector('.ball');
+              const ball2 = document.querySelector('.ball2');
+              if (ball1 && ball2) {
+                if (!state.paused && !state.loading) {
+                  ball1.classList.add('playing');
+                  ball2.classList.add('playing');
+                } else {
+                  ball1.classList.remove('playing');
+                  ball2.classList.remove('playing');
+                }
+              }
+              
+              // Remove the current track from the queue if it exists
+              if (currentTrack) {
+                const trackIndex = queue.findIndex(track => track.id === currentTrack.id);
+                if (trackIndex !== -1) {
+                  queue.splice(trackIndex, 1);
+                  updateQueue();
+                }
+              }
+              
+              // Update progress bar and time
+              if (currentTrack) {
+                const currentTime = state.position || 0;
+                const duration = currentTrack.duration_ms || 0;
+                updateProgressBar(currentTime, duration);
+                
+                // Start progress update interval if playing
+                if (!state.paused && !state.loading) {
+                  startProgressUpdate();
+                } else {
+                  stopProgressUpdate();
+                  
+                  // Check if this is the end of the track and we're not loading a new one
+                  if (state.position === 0 && state.duration > 0 && !state.loading && queue.length > 0) {
+                    const nextTrack = queue[0];
+                    console.log('Track ended, playing next track:', nextTrack.name);
+                    playTrack(nextTrack);
+                  }
+                }
+              }
+            }
+          });
+
+          // Ready
+          player.addListener('ready', ({ device_id }) => {
+            console.log('Ready with Device ID', device_id);
+            deviceId = device_id;
+            resolve(device_id);
+          });
+
+          // Not Ready
+          player.addListener('not_ready', ({ device_id }) => {
+            console.log('Device ID has gone offline', device_id);
+            deviceId = null;
+          });
+
+          // Connect to the player
+          console.log('Connecting to player...');
+          player.connect().then(success => {
+            if (success) {
+              console.log('Successfully connected to Spotify!');
+            } else {
+              console.error('Failed to connect to Spotify');
+              reject(new Error('Failed to connect to Spotify'));
+            }
+          });
+        });
+      }
+
+      let progressInterval = null;
+
+      function startProgressUpdate() {
+        stopProgressUpdate();
+        
+        progressInterval = setInterval(async () => {
+          try {
+            const state = await player.getCurrentState();
+            if (state) {
+              const currentTime = state.position;
+              const duration = state.track_window.current_track.duration_ms;
+              updateProgressBar(currentTime, duration);
+            }
+          } catch (error) {
+            console.error('Error getting player state:', error);
+            stopProgressUpdate();
+          }
+        }, 100);
+      }
+
+      function stopProgressUpdate() {
+        if (progressInterval) {
+          clearInterval(progressInterval);
+          progressInterval = null;
+        }
+      }
+
+      // Update progress bar
+      function updateProgressBar(currentTime, duration) {
+        const progressBar = document.querySelector('.progress');
+        const currentTimeElement = document.querySelector('.currentTime');
+        const durationElement = document.querySelector('.duration');
+        
+        if (!progressBar || !currentTimeElement || !durationElement) return;
+        
+        // Calculate percentage
+        const percentage = Math.min((currentTime / duration) * 100, 100);
+        progressBar.style.width = `${percentage}%`;
+        
+        // Format time
+        const formatTime = (ms) => {
+          if (!ms) return '00:00';
+          const minutes = Math.floor(ms / 60000);
+          const seconds = Math.floor((ms % 60000) / 1000);
+          return `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+        };
+        
+        currentTimeElement.textContent = formatTime(currentTime);
+        durationElement.textContent = formatTime(duration);
+      }
+
+      // Initialize Color Thief
+      const colorThief = new ColorThief();
+
+      // Function to get dominant color from image
+      async function getDominantColor(imageUrl) {
+        return new Promise((resolve, reject) => {
+          const img = new Image();
+          img.crossOrigin = "Anonymous";
+          img.onload = () => {
+            try {
+              const color = colorThief.getColor(img);
+              const hex = rgbToHex(color[0], color[1], color[2]);
+              resolve(hex);
+            } catch (error) {
+              reject(error);
+            }
+          };
+          img.onerror = reject;
+          img.src = imageUrl;
+        });
+      }
+
+      // Helper function to convert RGB to Hex
+      function rgbToHex(r, g, b) {
+        return '#' + [r, g, b].map(x => {
+          const hex = x.toString(16);
+          return hex.length === 1 ? '0' + hex : hex;
+        }).join('');
+      }
+
+      // Helper function to calculate luminance
+      function getLuminance(r, g, b) {
+        // Convert RGB to relative luminance
+        const [rs, gs, bs] = [r, g, b].map(c => {
+          c = c / 255;
+          return c <= 0.03928 ? c / 12.92 : Math.pow((c + 0.055) / 1.055, 2.4);
+        });
+        return 0.2126 * rs + 0.7152 * gs + 0.0722 * bs;
+      }
+
+      // Function to update background color
+      async function updateBackgroundColor(imageUrl) {
+        try {
+          // Create a new image and wait for it to load
+          const img = new Image();
+          img.crossOrigin = "Anonymous";
+          
+          // Wait for the image to load
+          await new Promise((resolve, reject) => {
+            img.onload = resolve;
+            img.onerror = reject;
+            img.src = imageUrl;
+          });
+          
+          // Get the color palette from the loaded image
+          const palette = colorThief.getPalette(img, 3); // Get 3 colors
+          const mainColor = palette[0];
+          const secondaryColor = palette[1];
+          const tertiaryColor = palette[2];
+          
+          // Convert colors to hex
+          const mainHex = rgbToHex(mainColor[0], mainColor[1], mainColor[2]);
+          const secondaryHex = rgbToHex(secondaryColor[0], secondaryColor[1], secondaryColor[2]);
+          const tertiaryHex = rgbToHex(tertiaryColor[0], tertiaryColor[1], tertiaryColor[2]);
+          
+          // Calculate luminance for main color
+          const luminance = getLuminance(mainColor[0], mainColor[1], mainColor[2]);
+          
+          // Remove any existing background color classes
+          const bgClasses = Array.from(document.body.classList).filter(cls => cls.startsWith('!bg-'));
+          document.body.classList.remove(...bgClasses);
+          
+          // Use black if the color is too light (luminance > 0.7)
+          if (luminance > 0.7) {
+            document.body.classList.add('!bg-black');
+          } else {
+            document.body.classList.add(`!bg-[${mainHex}]`);
+          }
+          
+          // Update SVG ball colors
+          const ball1 = document.querySelector('.ball ellipse');
+          const ball2 = document.querySelector('.ball2 ellipse');
+          if (ball1) {
+            ball1.setAttribute('fill', secondaryHex);
+          }
+          if (ball2) {
+            ball2.setAttribute('fill', tertiaryHex);
+          }
+        } catch (error) {
+          console.error('Error updating background color:', error);
+          // Fallback to black on error
+          document.body.classList.add('!bg-black');
+          const ball1 = document.querySelector('.ball ellipse');
+          const ball2 = document.querySelector('.ball2 ellipse');
+          if (ball1) {
+            ball1.setAttribute('fill', '#00ff0a'); // Default green color
+          }
+          if (ball2) {
+            ball2.setAttribute('fill', '#00ff0a'); // Default green color
+          }
+        }
+      }
+
+      // Update now playing section
+      function updateNowPlaying(track) {
+        if (!track) return;
+        
+        currentTrack = track;
+        document.getElementById('nowPlayingImage').src = track.album.images[0].url;
+        document.getElementById('nowPlayingArtist').textContent = track.artists[0].name;
+        document.getElementById('nowPlayingTitle').textContent = track.name;
+        
+        // Update background color
+        updateBackgroundColor(track.album.images[0].url);
+        
+        // Show playbar
+        const playbar = document.querySelector('.playbar');
+        if (playbar) {
+          playbar.style.display = 'flex';
+        }
+      }
+
+      // Get access token
+      async function getAccessToken() {
+        try {
+          // First, check if we have a code in the URL
+          const urlParams = new URLSearchParams(window.location.search);
+          const code = urlParams.get('code');
+          
+          if (code) {
+            // Exchange the code for tokens
+            const response = await fetch(`/.netlify/functions/auth?code=${code}`);
+            if (!response.ok) {
+              throw new Error(`HTTP error! status: ${response.status}`);
+            }
+            const data = await response.json();
+            accessToken = data.access_token;
+            refreshToken = data.refresh_token;
+            
+            // Calculate token expiry
+            const expiresIn = data.expires_in || 3600; // Default to 1 hour if not provided
+            tokenExpiry = Date.now() + (expiresIn * 1000);
+            
+            // Store tokens in localStorage
+            localStorage.setItem('spotify_access_token', accessToken);
+            localStorage.setItem('spotify_refresh_token', refreshToken);
+            localStorage.setItem('spotify_token_expiry', tokenExpiry);
+            
+            // Initialize the player
+            await initializePlayer(accessToken);
+            
+            // Remove the code from the URL
+            window.history.replaceState({}, document.title, window.location.pathname);
+            
+            return accessToken;
+          } else if (refreshToken) {
+            // Try to refresh the token
+            const response = await fetch(`/.netlify/functions/auth?refresh_token=${refreshToken}`);
+            if (response.ok) {
+              const data = await response.json();
+              accessToken = data.access_token;
+              const expiresIn = data.expires_in || 3600;
+              tokenExpiry = Date.now() + (expiresIn * 1000);
+              
+              localStorage.setItem('spotify_access_token', accessToken);
+              localStorage.setItem('spotify_token_expiry', tokenExpiry);
+              return accessToken;
+            }
+          }
+          
+          // If we get here, we need to get a new authorization URL
+          const response = await fetch('/.netlify/functions/auth');
+          if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+          }
+          const data = await response.json();
+          
+          // Redirect to Spotify login
+          window.location.href = data.authorize_url;
+          return null;
+        } catch (error) {
+          console.error('Error getting access token:', error);
+          showError('Error authenticating with Spotify. Please try again.');
+          return null;
+        }
+      }
+
+      // Load queue from localStorage on page load
+      function loadQueue() {
+        const savedQueue = localStorage.getItem('spukeboxQueue');
+        if (savedQueue) {
+          try {
+            queue = JSON.parse(savedQueue);
+            updateQueue();
+          } catch (error) {
+            console.error('Error loading queue from localStorage:', error);
+            queue = [];
+          }
+        }
+      }
+
+      // Save queue to localStorage
+      function saveQueue() {
+        try {
+          localStorage.setItem('spukeboxQueue', JSON.stringify(queue));
+        } catch (error) {
+          console.error('Error saving queue to localStorage:', error);
+        }
+      }
+
+      // Play track
+      async function playTrack(track) {
+        try {
+          console.log('Starting playTrack function for:', track.name);
+          
+          // Get access token if we don't have one
+          if (!accessToken) {
+            console.log('No access token, getting new one...');
+            const token = await getAccessToken();
+            if (!token) return; // User will be redirected to login
+          }
+
+          if (!player) {
+            console.log('No player instance, initializing...');
+            await initializePlayer(accessToken);
+          }
+
+          // Wait for device ID if not available
+          if (!deviceId) {
+            console.log('Waiting for device ID...');
+            await new Promise((resolve, reject) => {
+              let attempts = 0;
+              const maxAttempts = 50; // 5 seconds total
+              const checkDeviceId = setInterval(() => {
+                attempts++;
+                if (deviceId) {
+                  console.log('Device ID received:', deviceId);
+                  clearInterval(checkDeviceId);
+                  resolve();
+                } else if (attempts >= maxAttempts) {
+                  console.log('Timeout waiting for device ID');
+                  clearInterval(checkDeviceId);
+                  reject(new Error('Timeout waiting for device ID'));
+                }
+              }, 100);
+            });
+          }
+
+          console.log('Playing track:', track.id, 'on device:', deviceId);
+          
+          // First, transfer playback to our device
+          console.log('Transferring playback to our device...');
+          const transferResponse = await fetch('https://api.spotify.com/v1/me/player', {
+            method: 'PUT',
+            body: JSON.stringify({
+              device_ids: [deviceId],
+              play: true
+            }),
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': `Bearer ${accessToken}`
+            }
+          });
+
+          if (!transferResponse.ok) {
+            console.error('Failed to transfer playback:', await transferResponse.text());
+            throw new Error(`Failed to transfer playback: ${transferResponse.status}`);
+          }
+
+          // Small delay to ensure transfer is complete
+          await new Promise(resolve => setTimeout(resolve, 500));
+
+          // Then play the track
+          console.log('Starting track playback...');
+          const playResponse = await fetch(`https://api.spotify.com/v1/me/player/play?device_id=${deviceId}`, {
+            method: 'PUT',
+            body: JSON.stringify({
+              uris: [`spotify:track:${track.id}`],
+              position_ms: 0
+            }),
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': `Bearer ${accessToken}`
+            }
+          });
+
+          if (!playResponse.ok) {
+            console.error('Failed to play track:', await playResponse.text());
+            throw new Error(`Failed to play track: ${playResponse.status}`);
+          }
+
+          console.log('Waiting for track to start playing...');
+          // Wait for the track to start playing
+          await new Promise((resolve, reject) => {
+            let attempts = 0;
+            const maxAttempts = 50; // 5 seconds total
+            const checkPlaying = setInterval(() => {
+              attempts++;
+              player.getCurrentState().then(state => {
+                console.log('Current player state:', state);
+                if (state && !state.paused && !state.loading) {
+                  console.log('Track is playing!');
+                  clearInterval(checkPlaying);
+                  resolve();
+                } else if (attempts >= maxAttempts) {
+                  console.log('Timeout waiting for track to play');
+                  clearInterval(checkPlaying);
+                  reject(new Error('Timeout waiting for track to play'));
+                }
+              }).catch(error => {
+                console.error('Error checking player state:', error);
+                clearInterval(checkPlaying);
+                reject(error);
+              });
+            }, 100);
+          });
+
+          updateNowPlaying(track);
+          isPlaying = true;
+          console.log('Playback started successfully');
+        } catch (error) {
+          console.error('Error playing track:', error);
+          showError(`Error playing track: ${error.message}`);
+          
+          // If we get a 403 error, it might be a mobile device issue
+          if (error.message.includes('403')) {
+            showError('Mobile playback requires a Premium account. Please use a desktop device or upgrade to Premium.');
+          }
+        }
+      }
+
+      // Modal functions
+      function showModal(track) {
+        selectedTrack = track;
+        document.getElementById('modalTrackImage').src = track.album.images[0].url;
+        document.getElementById('modalTrackName').textContent = track.name;
+        document.getElementById('modalTrackArtist').textContent = track.artists[0].name;
+        
+        // Format duration
+        const duration = new Date(track.duration_ms).toISOString().substr(14, 5);
+        document.getElementById('modalTrackDuration').textContent = duration;
+        
+        // Get album year from release date
+        const year = track.album.release_date.split('-')[0];
+        document.getElementById('modalTrackYear').textContent = year;
+        
+        document.getElementById('modalBackdrop').classList.add('active');
+        document.getElementById('confirmationModal').classList.add('active');
+      }
+
+      function hideModal() {
+        document.getElementById('modalBackdrop').classList.remove('active');
+        document.getElementById('confirmationModal').classList.remove('active');
+        selectedTrack = null;
+      }
+
+      // Queue Action Modal functions
+      let queueActionTrack = null;
+      let queueActionType = null; // 'play' or 'remove'
+
+      function showQueueActionModal(track) {
+        queueActionTrack = track;
+        document.getElementById('queueActionBackdrop').classList.add('active');
+        document.getElementById('queueActionModal').classList.add('active');
+      }
+
+      function hideQueueActionModal() {
+        document.getElementById('queueActionBackdrop').classList.remove('active');
+        document.getElementById('queueActionModal').classList.remove('active');
+        // Don't clear queueActionTrack here, we need it for the confirmation modal
+      }
+
+      // Add click handler to backdrop
+      document.getElementById('queueActionBackdrop').addEventListener('click', (e) => {
+        if (e.target === document.getElementById('queueActionBackdrop')) {
+          hideQueueActionModal();
+          queueActionTrack = null;
+          queueActionType = null;
+        }
+      });
+
+      function showQueueConfirmModal(track, action) {
+        queueActionType = action;
+        const message = `Are you sure you want to ${action.toUpperCase()} this track right now?`;
+        document.getElementById('queueConfirmMessage').textContent = message;
+        document.getElementById('queueConfirmBackdrop').classList.add('active');
+        document.getElementById('queueConfirmModal').classList.add('active');
+      }
+
+      function hideQueueConfirmModal() {
+        document.getElementById('queueConfirmBackdrop').classList.remove('active');
+        document.getElementById('queueConfirmModal').classList.remove('active');
+        // Clear the track data after the confirmation modal is closed
+        queueActionTrack = null;
+        queueActionType = null;
+      }
+
+      // Update queue click handler
+      function updateQueue() {
+        const queueContainer = document.getElementById('queue');
+        
+        if (queue.length === 0) {
+          queueContainer.innerHTML = `
+            <div class="flex flex-col items-center justify-center p-8 text-center text-gray-400">
+              <p class="text-lg text-white/60">Add more tracks to keep the party going!</p>
+            </div>
+          `;
+          document.getElementById('queueDuration').textContent = '00:00';
+          return;
+        }
+        
+        queueContainer.innerHTML = queue.map(track => createTrackElement(track, true)).join('');
+        
+        // Calculate and update total duration
+        const totalDuration = queue.reduce((sum, track) => sum + track.duration_ms, 0);
+        const minutes = Math.floor(totalDuration / 60000);
+        const seconds = Math.floor((totalDuration % 60000) / 1000);
+        document.getElementById('queueDuration').textContent = `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+        
+        // Add click handlers to queue items
+        document.querySelectorAll('.queue-item').forEach(item => {
+          item.addEventListener('click', () => {
+            const trackId = item.dataset.trackId;
+            const track = queue.find(t => t.id === trackId);
+            if (track) {
+              showQueueActionModal(track);
+            }
+          });
+        });
+
+        // Save queue to localStorage after updating
+        saveQueue();
+      }
+
+      // Function to create a track element
+      function createTrackElement(track, isQueueItem = false) {
+        const duration = new Date(track.duration_ms).toISOString().substr(14, 5);
+        const queueClass = isQueueItem ? 'queue-item' : '';
+        return `
+          <div class="track flex gap-3 group hover:cursor-pointer p-4 bg-white/10 rounded-2xl mb-3 ${queueClass}" 
+               data-track-id="${track.id}"
+               data-track-name="${track.name}"
+               data-track-artist="${track.artists[0].name}"
+               data-track-duration="${duration}"
+               data-track-image="${track.album.images[0].url}">
+            <img src="${track.album.images[0].url}" width="64" height="64" alt="" class="rounded track-image">
+            <div class="track-info w-full">
+              <div class="track-name flex justify-between place-items-center w-full gap-4">
+                <h3 class="text-lg font-semibold font-black track-title line-clamp-1 text-white">${track.name}</h3>
+                <span class="running-time text-white/40 font-normal track-duration">${duration}</span>
+              </div>
+              <div class="track-artist flex justify-between place-items-cente gap-4">
+                <h3 class="text-white/40 artist-name line-clamp-1">${track.artists[0].name}</h3>  
+              </div>
+            </div>
+          </div>
+        `;
+      }
+
+      // Function to show loading state
+      function showLoading() {
+        const resultsContainer = document.getElementById('searchResults');
+        resultsContainer.innerHTML = `
+          <div class="flex flex-col items-center justify-center h-full text-white/50">
+            <div class="w-8 h-8 border-4 border-white/50 border-t-white rounded-full animate-spin mb-2"></div>
+            <p class="text-lg">Searching...</p>
+          </div>
+        `;
+      }
+
+      // Function to show error state
+      function showError(message) {
+        const status = document.getElementById('searchStatus');
+        status.innerHTML = `<div class="text-red-500">${message}</div>`;
+      }
+
+      // Function to clear status
+      function clearStatus() {
+        const status = document.getElementById('searchStatus');
+        status.innerHTML = '';
+      }
+
+      // Function to add track to queue
+      function addToQueue(track) {
+        queue.push(track);
+        updateQueue();
+      }
+
+      // Function to remove track from queue
+      function removeFromQueue(trackId) {
+        queue = queue.filter(track => track.id !== trackId);
+        updateQueue();
+      }
+
+      // Debounce function to limit API calls
+      function debounce(func, wait) {
+        let timeout;
+        return function executedFunction(...args) {
+          const later = () => {
+            clearTimeout(timeout);
+            func(...args);
+          };
+          clearTimeout(timeout);
+          timeout = setTimeout(later, wait);
+        };
+      }
+
+      // Function to search tracks
+      async function searchTracks(query) {
+        if (!query) {
+          document.getElementById('searchResults').innerHTML = `
+            <div class="flex flex-col items-center justify-center h-full text-white/50">
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8 mb-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+              </svg>
+              <p class="text-lg">Search to find tracks</p>
+            </div>
+          `;
+          document.getElementById('resultsLabel').classList.add('hidden');
+          clearStatus();
+          return;
+        }
+
+        showLoading();
+        document.getElementById('resultsLabel').classList.remove('hidden');
+        
+        try {
+          const response = await fetch(`/.netlify/functions/search?query=${encodeURIComponent(query)}`);
+          
+          if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+          }
+          
+          const data = await response.json();
+          clearStatus();
+          
+          const resultsContainer = document.getElementById('searchResults');
+          resultsContainer.innerHTML = '';
+          
+          if (data.tracks && data.tracks.items) {
+            if (data.tracks.items.length === 0) {
+              showError('No results found');
+            } else {
+              data.tracks.items.forEach(track => {
+                resultsContainer.innerHTML += createTrackElement(track);
+              });
+              
+              // Add click handlers to search results
+              document.querySelectorAll('.track:not(.queue-item)').forEach(item => {
+                item.addEventListener('click', () => {
+                  const trackId = item.dataset.trackId;
+                  const track = data.tracks.items.find(t => t.id === trackId);
+                  if (track) {
+                    showModal(track);
+                  }
+                });
+              });
+            }
+          }
+        } catch (error) {
+          console.error('Error searching tracks:', error);
+          showError('Error searching tracks. Please try again.');
+        }
+      }
+
+      // Initialize on page load
+      document.addEventListener('DOMContentLoaded', async () => {
+        // Set up modal event listeners
+        const cancelAdd = document.getElementById('cancelAdd');
+        const confirmAdd = document.getElementById('confirmAdd');
+        const cancelQueueAction = document.getElementById('cancelQueueAction');
+        const removeQueueAction = document.getElementById('removeQueueAction');
+        const playQueueAction = document.getElementById('playQueueAction');
+        const cancelQueueConfirm = document.getElementById('cancelQueueConfirm');
+        const confirmQueueConfirm = document.getElementById('confirmQueueConfirm');
+
+        // Add click handler for album cover pause/resume
+        const nowPlayingImage = document.getElementById('nowPlayingImage');
+        if (nowPlayingImage) {
+          nowPlayingImage.addEventListener('click', async () => {
+            if (!player || !currentTrack) return;
+            
+            try {
+              const state = await player.getCurrentState();
+              if (!state) return;
+              
+              if (state.paused) {
+                // Resume playback
+                await player.resume();
+                const record = document.querySelector('.record');
+                if (record) {
+                  record.classList.add('left-6');
+                }
+                startProgressUpdate();
+              } else {
+                // Pause playback
+                await player.pause();
+                const record = document.querySelector('.record');
+                if (record) {
+                  record.classList.remove('left-6');
+                }
+                stopProgressUpdate();
+              }
+            } catch (error) {
+              console.error('Error toggling playback:', error);
+            }
+          });
+        }
+
+        if (cancelAdd) cancelAdd.addEventListener('click', hideModal);
+        if (confirmAdd) confirmAdd.addEventListener('click', () => {
+          if (selectedTrack) {
+            addToQueue(selectedTrack);
+            hideModal();
+          }
+        });
+
+        if (cancelQueueAction) cancelQueueAction.addEventListener('click', () => {
+          hideQueueActionModal();
+          queueActionTrack = null;
+          queueActionType = null;
+        });
+        if (removeQueueAction) removeQueueAction.addEventListener('click', () => {
+          if (queueActionTrack) {
+            hideQueueActionModal();
+            showQueueConfirmModal(queueActionTrack, 'remove');
+          }
+        });
+        if (playQueueAction) playQueueAction.addEventListener('click', () => {
+          if (queueActionTrack) {
+            hideQueueActionModal();
+            showQueueConfirmModal(queueActionTrack, 'play');
+          }
+        });
+
+        if (cancelQueueConfirm) cancelQueueConfirm.addEventListener('click', hideQueueConfirmModal);
+        if (confirmQueueConfirm) confirmQueueConfirm.addEventListener('click', () => {
+          if (queueActionTrack) {
+            if (queueActionType === 'play') {
+              playTrack(queueActionTrack);
+            } else {
+              removeFromQueue(queueActionTrack.id);
+            }
+            hideQueueConfirmModal();
+          }
+        });
+
+        // Set up search input
+        const searchInput = document.getElementById('searchInput');
+        const clearSearch = document.getElementById('clearSearch');
+        if (searchInput) {
+          const debouncedSearch = debounce((e) => {
+            const query = e.target.value;
+            searchTracks(query);
+            // Show/hide clear button based on input value
+            clearSearch.classList.toggle('hidden', !query);
+          }, 300);
+          searchInput.addEventListener('input', debouncedSearch);
+          
+          // Add clear button functionality
+          clearSearch.addEventListener('click', () => {
+            searchInput.value = '';
+            searchInput.focus();
+            clearSearch.classList.add('hidden');
+            searchTracks('');
+          });
+        }
+
+        // Load queue and initialize player
+        loadQueue();
+        if (accessToken) {
+          try {
+            await initializePlayer(accessToken);
+          } catch (error) {
+            console.error('Failed to initialize player:', error);
+            // Clear invalid tokens
+            localStorage.removeItem('spotify_access_token');
+            localStorage.removeItem('spotify_refresh_token');
+            accessToken = null;
+            refreshToken = null;
+            // Get new tokens
+            await getAccessToken();
+          }
+        } else {
+          await getAccessToken();
+        }
+      });
+    </script>
   </body>
 </html>
