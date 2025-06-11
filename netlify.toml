@@ -1,9 +1,9 @@
 [build]
-  command = "echo 'No build step needed'"
-  publish = "."
+  command = "mkdir -p dist && cp index.html dist/ && cp -r images dist/ && cp -r fonts dist/"
+  publish = "dist"
 
 [functions]
-  included_files = ["netlify/functions/**/*.js"]
+  directory = "netlify/functions"
 
 [build.environment]
   NODE_VERSION = "18"
