@@ -7,12 +7,8 @@
 
 [build.environment]
   NODE_VERSION = "18"
-  NETLIFY_USE_ESBUILD = "true"
 
 [dev]
   command = "netlify dev"
   targetPort = 8888
-  envFile = ".env"
-
-[[plugins]]
-  package = "@netlify/plugin-functions-core" 
+  envFile = ".env" 
