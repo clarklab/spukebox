@@ -1,12 +1,12 @@
 [build]
   command = "echo 'No build step needed'"
   publish = "."
+  functions = "netlify/functions"
 
 [build.environment]
   NODE_VERSION = "18"
 
 [functions]
-  directory = "netlify/functions"
   included_files = ["netlify/functions/**/*.js"]
 
 [dev]
@@ -15,7 +15,4 @@
   envFile = ".env"
 
 [[plugins]]
-  package = "@netlify/plugin-nextjs"
-
-# By defining an empty plugins array, we prevent Netlify's build system
-# from automatically detecting and applying the Next.js plugin. 
+  package = "@netlify/plugin-nextjs" 
