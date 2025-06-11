@@ -1,13 +1,12 @@
 [build]
   command = "echo 'No build step needed'"
   publish = "."
-  functions = "netlify/functions"
-
-[build.environment]
-  NODE_VERSION = "18"
 
 [functions]
   included_files = ["netlify/functions/**/*.js"]
+
+[build.environment]
+  NODE_VERSION = "18"
 
 [dev]
   command = "netlify dev"
