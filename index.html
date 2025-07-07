@@ -157,45 +157,57 @@
       .ball {
         opacity: 0;
         transition: opacity 1s ease-in-out;
+        animation: ballFloat1 20s linear infinite;
+        transform: translate3d(64px, 201px, 0);
       }
       .ball.playing {
-        opacity: 1;
+        opacity: 0.5;
       }
       .ball2 {
         opacity: 0;
         transition: opacity 1s ease-in-out;
-        transform: rotate(180deg) scaleX(-1);
+        animation: ballFloat2 15s linear infinite;
+        transform: translate3d(64px, 201px, 0);
       }
       .ball2.playing {
-        opacity: 1;
+        opacity: 0.4;
+      }
+      
+      @keyframes ballFloat1 {
+        0% { transform: translate3d(64px, 201px, 0); }
+        20% { transform: translate3d(705px, 678px, 0); }
+        40% { transform: translate3d(1219px, 430px, 0); }
+        60% { transform: translate3d(838px, 64px, 0); }
+        80% { transform: translate3d(371px, 681px, 0); }
+        100% { transform: translate3d(64px, 201px, 0); }
+      }
+      
+      @keyframes ballFloat2 {
+        0% { transform: translate3d(371px, 681px, 0); }
+        20% { transform: translate3d(838px, 64px, 0); }
+        40% { transform: translate3d(64px, 201px, 0); }
+        60% { transform: translate3d(705px, 678px, 0); }
+        80% { transform: translate3d(1219px, 430px, 0); }
+        100% { transform: translate3d(371px, 681px, 0); }
+      }
+      
+      /* Respect user's motion preferences */
+      @media (prefers-reduced-motion: reduce) {
+        .ball, .ball2 {
+          animation: none;
+          transform: translate3d(50%, 50%, 0) !important;
+        }
       }
     </style>
   </head>
   <body class="h-screen w-screen overflow-hidden m-0 p-0 bg-light h-full">
 
-<svg class="ball absolute inset-0 w-full h-full pointer-events-none -z-1" xmlns="http://www.w3.org/2000/svg" shape-rendering="geometricPrecision" text-rendering="geometricPrecision" viewBox="0 0 1280 720" style="white-space: pre;">
-    <style>
-      @keyframes a0_t { 0% { transform: translate(63.5px,201.5px); } 20% { transform: translate(704.755366px,678.215137px); } 40% { transform: translate(1219px,429.5px); } 60% { transform: translate(838px,63.5px); } 80% { transform: translate(370.81097px,680.746203px); } 100% { transform: translate(64px,201px); } }
-    </style>
-    <defs>
-        <filter id="Filter-0" x="-50%" y="-50%" width="250%" height="250%" color-interpolation-filters="sRGB">
-            <feGaussianBlur stdDeviation="80"/>
-        </filter>
-    </defs>
-    <ellipse rx="242" ry="242" fill="#00ff0a" stroke="none" opacity="0.5" filter="url(#Filter-0)" transform="translate(63.5,201.5)" style="animation: 20s linear infinite both a0_t;"/>
-</svg>
+<!-- Optimized CSS-based animated balls -->
+<div class="ball absolute pointer-events-none -z-1 w-80 h-80 rounded-full opacity-0 transition-opacity duration-1000 will-change-transform" style="background: radial-gradient(circle, #00ff0a 0%, rgba(0,255,10,0.3) 70%, transparent 100%); filter: blur(40px);">
+</div>
 
-<svg class="ball2 absolute inset-0 w-full h-full pointer-events-none blur-3xl -z-1" xmlns="http://www.w3.org/2000/svg" shape-rendering="geometricPrecision" text-rendering="geometricPrecision" viewBox="0 0 1280 720" style="white-space: pre;">
-    <style>
-      @keyframes a0_t { 0% { transform: translate(63.5px,201.5px); } 20% { transform: translate(704.755366px,678.215137px); } 40% { transform: translate(1219px,429.5px); } 60% { transform: translate(838px,63.5px); } 80% { transform: translate(370.81097px,680.746203px); } 100% { transform: translate(64px,201px); } }
-    </style>
-    <defs>
-        <filter id="Filter-1" x="-50%" y="-50%" width="250%" height="250%" color-interpolation-filters="sRGB">
-            <feGaussianBlur stdDeviation="80"/>
-        </filter>
-    </defs>
-    <ellipse rx="242" ry="242" fill="#00ff0a" stroke="none" opacity="0.5" filter="url(#Filter-1)" transform="translate(63.5,201.5)" style="animation: 15s linear infinite both a0_t;"/>
-</svg>
+<div class="ball2 absolute pointer-events-none -z-1 w-72 h-72 rounded-full opacity-0 transition-opacity duration-1000 will-change-transform" style="background: radial-gradient(circle, #00ff0a 0%, rgba(0,255,10,0.2) 60%, transparent 100%); filter: blur(50px);">
+</div>
 
     <!-- Modal -->
     <div id="modalBackdrop" class="modal-backdrop fixed inset-0 bg-black/50 z-50"></div>
@@ -658,26 +670,26 @@
             document.body.classList.add(`!bg-[${mainHex}]`);
           }
           
-          // Update SVG ball colors
-          const ball1 = document.querySelector('.ball ellipse');
-          const ball2 = document.querySelector('.ball2 ellipse');
+          // Update CSS ball colors with gradients
+          const ball1 = document.querySelector('.ball');
+          const ball2 = document.querySelector('.ball2');
           if (ball1) {
-            ball1.setAttribute('fill', secondaryHex);
+            ball1.style.background = `radial-gradient(circle, ${secondaryHex} 0%, ${secondaryHex}50 70%, transparent 100%)`;
           }
           if (ball2) {
-            ball2.setAttribute('fill', tertiaryHex);
+            ball2.style.background = `radial-gradient(circle, ${tertiaryHex} 0%, ${tertiaryHex}30 60%, transparent 100%)`;
           }
         } catch (error) {
           console.error('Error updating background color:', error);
           // Fallback to black on error
           document.body.classList.add('!bg-black');
-          const ball1 = document.querySelector('.ball ellipse');
-          const ball2 = document.querySelector('.ball2 ellipse');
+          const ball1 = document.querySelector('.ball');
+          const ball2 = document.querySelector('.ball2');
           if (ball1) {
-            ball1.setAttribute('fill', '#00ff0a'); // Default green color
+            ball1.style.background = 'radial-gradient(circle, #00ff0a 0%, rgba(0,255,10,0.3) 70%, transparent 100%)';
           }
           if (ball2) {
-            ball2.setAttribute('fill', '#00ff0a'); // Default green color
+            ball2.style.background = 'radial-gradient(circle, #00ff0a 0%, rgba(0,255,10,0.2) 60%, transparent 100%)';
           }
         }
       }
