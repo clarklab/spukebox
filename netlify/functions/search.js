@@ -7,7 +7,7 @@ exports.handler = async (event, context) => {
   }
 
   try {
-    const { query } = event.queryStringParameters;
+    const { query, type = 'all' } = event.queryStringParameters;
     
     if (!query) {
       return {
@@ -26,11 +26,28 @@ exports.handler = async (event, context) => {
     const data = await spotifyApi.clientCredentialsGrant();
     spotifyApi.setAccessToken(data.body['access_token']);
 
-    // Search for tracks
-    const searchResults = await spotifyApi.searchTracks(query, {
-      limit: 10,
+    let searchResults;
+    const searchOptions = {
+      limit: 20,
       market: 'US'
-    });
+    };
+
+    // Search based on type parameter
+    switch (type) {
+      case 'artist':
+        // Search for tracks where the artist name matches
+        searchResults = await spotifyApi.searchTracks(`artist:${query}`, searchOptions);
+        break;
+      case 'title':
+        // Search for tracks where the track name matches
+        searchResults = await spotifyApi.searchTracks(`track:${query}`, searchOptions);
+        break;
+      case 'all':
+      default:
+        // General search
+        searchResults = await spotifyApi.searchTracks(query, searchOptions);
+        break;
+    }
 
     return {
       statusCode: 200,
