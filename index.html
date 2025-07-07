@@ -1200,32 +1200,70 @@
         // Add click handler for album cover pause/resume
         const nowPlayingImage = document.getElementById('nowPlayingImage');
         if (nowPlayingImage) {
+          // Add cursor pointer to indicate it's clickable
+          nowPlayingImage.style.cursor = 'pointer';
+          
           nowPlayingImage.addEventListener('click', async () => {
-            if (!player || !currentTrack) return;
+            if (!player || !currentTrack) {
+              console.log('No player or current track');
+              return;
+            }
             
             try {
               const state = await player.getCurrentState();
-              if (!state) return;
+              if (!state) {
+                console.log('No player state available');
+                return;
+              }
+              
+              console.log('Toggle playback - current state:', state.paused ? 'paused' : 'playing');
               
               if (state.paused) {
                 // Resume playback
+                console.log('Resuming playback');
                 await player.resume();
+                
+                // Update UI immediately for responsiveness
                 const record = document.querySelector('.record');
                 if (record) {
                   record.classList.add('left-6');
                 }
+                
+                // Update ball animations
+                const ball1 = document.querySelector('.ball');
+                const ball2 = document.querySelector('.ball2');
+                if (ball1 && ball2) {
+                  ball1.classList.add('playing');
+                  ball2.classList.add('playing');
+                }
+                
+                isPlaying = true;
                 startProgressUpdate();
               } else {
                 // Pause playback
+                console.log('Pausing playback');
                 await player.pause();
+                
+                // Update UI immediately for responsiveness
                 const record = document.querySelector('.record');
                 if (record) {
                   record.classList.remove('left-6');
                 }
+                
+                // Update ball animations
+                const ball1 = document.querySelector('.ball');
+                const ball2 = document.querySelector('.ball2');
+                if (ball1 && ball2) {
+                  ball1.classList.remove('playing');
+                  ball2.classList.remove('playing');
+                }
+                
+                isPlaying = false;
                 stopProgressUpdate();
               }
             } catch (error) {
               console.error('Error toggling playback:', error);
+              showError('Error toggling playback. Please try again.');
             }
           });
         }
