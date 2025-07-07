@@ -318,6 +318,9 @@
       let player = null;
       let deviceId = null;
       let tokenExpiry = localStorage.getItem('spotify_token_expiry');
+      let isTransitioning = false; // Prevent multiple transitions
+      let currentTrackId = null; // Track the ID of what we're playing
+      let autoplayNextTrack = true; // Control automatic queue progression
 
       // Initialize Web Playback SDK
       window.onSpotifyWebPlaybackSDKReady = () => {
@@ -406,9 +409,29 @@
           // Playback status updates
           player.addListener('player_state_changed', state => {
             console.log('Player state changed:', state);
-            if (state) {
-              const currentTrack = state.track_window.current_track;
-              updateNowPlaying(currentTrack);
+            if (!state) return;
+            
+            const spotifyTrack = state.track_window.current_track;
+            const previousTrack = state.track_window.previous_tracks[0];
+            const nextTrackExists = state.track_window.next_tracks.length > 0;
+            
+            // Only process if this is OUR track (not from another session)
+            if (spotifyTrack && currentTrackId && spotifyTrack.id !== currentTrackId) {
+              console.log('Ignoring external track:', spotifyTrack.name);
+              // If we have a queue and we're supposed to be playing, force our track
+              if (queue.length > 0 && !isTransitioning) {
+                setTimeout(() => {
+                  if (!isTransitioning && queue.length > 0) {
+                    playNextFromQueue();
+                  }
+                }, 100);
+              }
+              return;
+            }
+            
+            // Update UI based on state
+            if (spotifyTrack) {
+              updateNowPlaying(spotifyTrack);
               isPlaying = !state.paused;
               
               // Update record position based on playback state
@@ -434,34 +457,23 @@
                 }
               }
               
-              // Remove the current track from the queue if it exists
-              if (currentTrack) {
-                const trackIndex = queue.findIndex(track => track.id === currentTrack.id);
-                if (trackIndex !== -1) {
-                  queue.splice(trackIndex, 1);
-                  updateQueue();
-                }
+              // Update progress bar and time
+              const currentTime = state.position || 0;
+              const duration = spotifyTrack.duration_ms || 0;
+              updateProgressBar(currentTime, duration);
+              
+              // Start/stop progress updates
+              if (!state.paused && !state.loading) {
+                startProgressUpdate();
+              } else {
+                stopProgressUpdate();
               }
               
-              // Update progress bar and time
-              if (currentTrack) {
-                const currentTime = state.position || 0;
-                const duration = currentTrack.duration_ms || 0;
-                updateProgressBar(currentTime, duration);
-                
-                // Start progress update interval if playing
-                if (!state.paused && !state.loading) {
-                  startProgressUpdate();
-                } else {
-                  stopProgressUpdate();
-                  
-                  // Check if this is the end of the track and we're not loading a new one
-                  if (state.position === 0 && state.duration > 0 && !state.loading && queue.length > 0) {
-                    const nextTrack = queue[0];
-                    console.log('Track ended, playing next track:', nextTrack.name);
-                    playTrack(nextTrack);
-                  }
-                }
+              // Detect track end (position near duration, not playing, and was previously playing)
+              if (state.paused && previousTrack && previousTrack.id === currentTrackId && 
+                  !nextTrackExists && autoplayNextTrack && !isTransitioning) {
+                console.log('Track ended naturally');
+                handleTrackEnd();
               }
             }
           });
@@ -493,17 +505,36 @@
       }
 
       let progressInterval = null;
+      let hasTriggeredTrackEnd = false; // Prevent multiple end triggers
 
       function startProgressUpdate() {
         stopProgressUpdate();
+        hasTriggeredTrackEnd = false;
         
         progressInterval = setInterval(async () => {
           try {
             const state = await player.getCurrentState();
-            if (state) {
+            if (state && state.track_window.current_track) {
               const currentTime = state.position;
               const duration = state.track_window.current_track.duration_ms;
               updateProgressBar(currentTime, duration);
+              
+              // Check if we're near the end of the track (within 500ms)
+              if (!hasTriggeredTrackEnd && duration > 0 && 
+                  currentTime > 0 && (duration - currentTime) < 500 && 
+                  !state.paused && autoplayNextTrack) {
+                hasTriggeredTrackEnd = true;
+                console.log('Track about to end, preparing next track');
+                
+                // Pre-emptively handle the transition
+                if (queue.length > 0 && !isTransitioning) {
+                  setTimeout(() => {
+                    if (!isTransitioning) {
+                      handleTrackEnd();
+                    }
+                  }, duration - currentTime);
+                }
+              }
             }
           } catch (error) {
             console.error('Error getting player state:', error);
@@ -753,16 +784,60 @@
         }
       }
 
+      // Handle track ending
+      async function handleTrackEnd() {
+        if (isTransitioning) return;
+        
+        console.log('Handling track end, queue length:', queue.length);
+        currentTrackId = null;
+        
+        // Remove the finished track from queue if it's there
+        if (currentTrack && queue.length > 0 && queue[0].id === currentTrack.id) {
+          queue.shift();
+          updateQueue();
+        }
+        
+        // Play next track if available
+        if (queue.length > 0 && autoplayNextTrack) {
+          await playNextFromQueue();
+        }
+      }
+      
+      // Play next track from queue
+      async function playNextFromQueue() {
+        if (queue.length === 0 || isTransitioning) return;
+        
+        const nextTrack = queue[0];
+        console.log('Playing next track from queue:', nextTrack.name);
+        
+        // Remove from queue first to prevent duplicates
+        queue.shift();
+        updateQueue();
+        
+        await playTrack(nextTrack);
+      }
+      
       // Play track
       async function playTrack(track) {
+        if (isTransitioning) {
+          console.log('Already transitioning, ignoring play request');
+          return;
+        }
+        
+        isTransitioning = true;
+        
         try {
           console.log('Starting playTrack function for:', track.name);
+          currentTrackId = track.id;
           
           // Get access token if we don't have one
           if (!accessToken) {
             console.log('No access token, getting new one...');
             const token = await getAccessToken();
-            if (!token) return; // User will be redirected to login
+            if (!token) {
+              isTransitioning = false;
+              return; // User will be redirected to login
+            }
           }
 
           if (!player) {
@@ -793,29 +868,11 @@
 
           console.log('Playing track:', track.id, 'on device:', deviceId);
           
-          // First, transfer playback to our device
-          console.log('Transferring playback to our device...');
-          const transferResponse = await fetch('https://api.spotify.com/v1/me/player', {
-            method: 'PUT',
-            body: JSON.stringify({
-              device_ids: [deviceId],
-              play: true
-            }),
-            headers: {
-              'Content-Type': 'application/json',
-              'Authorization': `Bearer ${accessToken}`
-            }
-          });
-
-          if (!transferResponse.ok) {
-            console.error('Failed to transfer playback:', await transferResponse.text());
-            throw new Error(`Failed to transfer playback: ${transferResponse.status}`);
-          }
-
-          // Small delay to ensure transfer is complete
-          await new Promise(resolve => setTimeout(resolve, 500));
-
-          // Then play the track
+          // Update UI immediately to prevent flicker
+          updateNowPlaying(track);
+          currentTrack = track;
+          
+          // Play the track using Web API with our device
           console.log('Starting track playback...');
           const playResponse = await fetch(`https://api.spotify.com/v1/me/player/play?device_id=${deviceId}`, {
             method: 'PUT',
@@ -830,47 +887,68 @@
           });
 
           if (!playResponse.ok) {
-            console.error('Failed to play track:', await playResponse.text());
-            throw new Error(`Failed to play track: ${playResponse.status}`);
+            const errorText = await playResponse.text();
+            console.error('Failed to play track:', errorText);
+            
+            // If device not found, try to transfer first
+            if (playResponse.status === 404 || errorText.includes('Device not found')) {
+              console.log('Device not found, transferring playback first...');
+              const transferResponse = await fetch('https://api.spotify.com/v1/me/player', {
+                method: 'PUT',
+                body: JSON.stringify({
+                  device_ids: [deviceId],
+                  play: false // Don't autoplay on transfer
+                }),
+                headers: {
+                  'Content-Type': 'application/json',
+                  'Authorization': `Bearer ${accessToken}`
+                }
+              });
+              
+              if (transferResponse.ok) {
+                // Small delay then retry play
+                await new Promise(resolve => setTimeout(resolve, 300));
+                
+                const retryResponse = await fetch(`https://api.spotify.com/v1/me/player/play?device_id=${deviceId}`, {
+                  method: 'PUT',
+                  body: JSON.stringify({
+                    uris: [`spotify:track:${track.id}`],
+                    position_ms: 0
+                  }),
+                  headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${accessToken}`
+                  }
+                });
+                
+                if (!retryResponse.ok) {
+                  throw new Error(`Failed to play track after transfer: ${retryResponse.status}`);
+                }
+              } else {
+                throw new Error(`Failed to transfer playback: ${transferResponse.status}`);
+              }
+            } else {
+              throw new Error(`Failed to play track: ${playResponse.status}`);
+            }
           }
 
-          console.log('Waiting for track to start playing...');
-          // Wait for the track to start playing
-          await new Promise((resolve, reject) => {
-            let attempts = 0;
-            const maxAttempts = 50; // 5 seconds total
-            const checkPlaying = setInterval(() => {
-              attempts++;
-              player.getCurrentState().then(state => {
-                console.log('Current player state:', state);
-                if (state && !state.paused && !state.loading) {
-                  console.log('Track is playing!');
-                  clearInterval(checkPlaying);
-                  resolve();
-                } else if (attempts >= maxAttempts) {
-                  console.log('Timeout waiting for track to play');
-                  clearInterval(checkPlaying);
-                  reject(new Error('Timeout waiting for track to play'));
-                }
-              }).catch(error => {
-                console.error('Error checking player state:', error);
-                clearInterval(checkPlaying);
-                reject(error);
-              });
-            }, 100);
-          });
-
-          updateNowPlaying(track);
+          console.log('Track play command sent successfully');
           isPlaying = true;
-          console.log('Playback started successfully');
+          
+          // Give the player a moment to update
+          await new Promise(resolve => setTimeout(resolve, 200));
+          
         } catch (error) {
           console.error('Error playing track:', error);
           showError(`Error playing track: ${error.message}`);
+          currentTrackId = null;
           
           // If we get a 403 error, it might be a mobile device issue
           if (error.message.includes('403')) {
             showError('Mobile playback requires a Premium account. Please use a desktop device or upgrade to Premium.');
           }
+        } finally {
+          isTransitioning = false;
         }
       }
 
@@ -1179,10 +1257,13 @@
         });
 
         if (cancelQueueConfirm) cancelQueueConfirm.addEventListener('click', hideQueueConfirmModal);
-        if (confirmQueueConfirm) confirmQueueConfirm.addEventListener('click', () => {
+        if (confirmQueueConfirm) confirmQueueConfirm.addEventListener('click', async () => {
           if (queueActionTrack) {
             if (queueActionType === 'play') {
-              playTrack(queueActionTrack);
+              // Stop autoplay temporarily to play this specific track
+              autoplayNextTrack = false;
+              await playTrack(queueActionTrack);
+              autoplayNextTrack = true;
             } else {
               removeFromQueue(queueActionTrack.id);
             }
