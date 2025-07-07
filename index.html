@@ -1303,6 +1303,9 @@
         if (confirmQueueConfirm) confirmQueueConfirm.addEventListener('click', async () => {
           if (queueActionTrack) {
             if (queueActionType === 'play') {
+              // Remove the track from queue first (cutting in line)
+              removeFromQueue(queueActionTrack.id);
+              
               // Stop autoplay temporarily to play this specific track
               autoplayNextTrack = false;
               await playTrack(queueActionTrack);
