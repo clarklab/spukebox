@@ -1315,7 +1315,18 @@
         if (confirmQueueConfirm) confirmQueueConfirm.addEventListener('click', async () => {
           if (queueActionTrack) {
             if (queueActionType === 'play') {
-              // Remove the track from queue first (cutting in line)
+              // If there's a currently playing track, add it to the end of the queue (fair play)
+              if (currentTrack && currentTrackId) {
+                // Check if current track is already in the queue to avoid duplicates
+                const isAlreadyInQueue = queue.some(track => track.id === currentTrack.id);
+                if (!isAlreadyInQueue) {
+                  console.log('Adding interrupted track to end of queue:', currentTrack.name);
+                  queue.push(currentTrack);
+                  updateQueue();
+                }
+              }
+              
+              // Remove the selected track from queue (cutting in line)
               removeFromQueue(queueActionTrack.id);
               
               // Stop autoplay temporarily to play this specific track
